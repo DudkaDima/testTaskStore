@@ -10,7 +10,9 @@ import com.dudka.store.service.ProductService;
 import com.dudka.store.service.UserService;
 import com.dudka.store.util.mapper.MapperEntityDto;
 import lombok.extern.log4j.Log4j2;
+import org.apache.logging.log4j.Level;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Scope;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -26,7 +28,6 @@ import java.util.stream.Collectors;
 @Log4j2
 public class OrderController {
 
-    
     private final StringRedisTemplate redisTemplate;
     private final UserService userService;
 
@@ -66,9 +67,11 @@ public class OrderController {
         OrderDetails orderDetails = MapperEntityDto.mapOrderRequestToOrderDetails(
                 orderRequestDto, user.get(), productList);
         OrderDetails savedOrderDetails = orderDetailsService.saveOrderDetails(orderDetails);
+        log.log(Level.INFO, savedOrderDetails.getId());
         redisTemplate.opsForValue().set("order:" + savedOrderDetails.getUser().getId(),
                 String.valueOf(savedOrderDetails.getUser().getId()),
                 30, TimeUnit.SECONDS);
+
     }
 
     @RequestMapping(method = RequestMethod.PATCH, consumes = MediaType.ALL_VALUE, path = "/payForOrder")
