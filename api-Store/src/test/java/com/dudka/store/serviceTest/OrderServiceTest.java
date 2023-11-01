@@ -46,13 +46,6 @@ public class OrderServiceTest {
     @Autowired
     private ProductService productService;
 
-    /*
-    Add all necessary data to dto for mapping them into service which is
-    have to be tested, by that I mean creating list of orders which is
-    also a products with user that is Entity. Last but not lest -
-    check if I optimize creation of all data for tests
-
-     */
     @Test
     void testSaveOrderDetailsMethod() {
         List<OrderDto> orderDtos = new ArrayList<>();
@@ -72,6 +65,5 @@ public class OrderServiceTest {
         Assertions.assertEquals(orderDetailsService.saveOrderDetails(orderDetails),
                 orderDetailsService.findById(1L).get());
     }
-
 
 }
