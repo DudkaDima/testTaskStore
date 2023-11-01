@@ -52,12 +52,12 @@ public class User implements Serializable {
     @Column(name = "password")
     private String password;
 
-    @OneToMany(fetch = FetchType.LAZY, cascade = {CascadeType.PERSIST, CascadeType.MERGE,
+    @OneToMany(fetch = FetchType.LAZY, cascade = { CascadeType.MERGE,
             CascadeType.DETACH, CascadeType.REFRESH}, mappedBy = "user")
     @JsonBackReference
     private List<OrderDetails> orderDetails;
 
-    @ManyToOne(cascade = {CascadeType.PERSIST, CascadeType.MERGE,
+    @ManyToOne(cascade = {CascadeType.MERGE,
             CascadeType.DETACH, CascadeType.REFRESH}, fetch = FetchType.EAGER)
     private Role role;
 
@@ -119,7 +119,7 @@ public class User implements Serializable {
                 ", username='" + username + '\'' +
                 ", password='" + password + '\'' +
                 ", orderDetails=" + orderDetails +
-                ", role=" + role +
+                ", role=" + role.getName() +
                 '}';
     }
 }

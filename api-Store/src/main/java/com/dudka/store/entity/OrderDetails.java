@@ -31,7 +31,7 @@ public class OrderDetails implements Serializable {
     @Column(name = "payment_status")
     private Boolean payment_status;
 
-    @ManyToOne(cascade = {CascadeType.PERSIST, CascadeType.MERGE,
+    @ManyToOne(cascade = {CascadeType.MERGE,
             CascadeType.DETACH, CascadeType.REFRESH})
     @JoinColumn(name = "users_id")
     @JsonManagedReference

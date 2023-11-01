@@ -26,6 +26,7 @@ services:
       - db-data:/var/lib/postgresql/data
       - .:/docker-entrypoint-initdb.d
     restart: unless-stopped
+
   redis:
     image: redis:latest
     command: [ "--notify-keyspace-events", "Ex" ]
@@ -38,7 +39,7 @@ services:
     environment:
       - REDIS_PASSWORD=my-password
       - REDIS_PORT=6379
-  pgadmin :
+  pgadmin:
     container_name: pgadmin4_container
     image: dpage/pgadmin4:7
     restart: always

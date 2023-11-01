@@ -21,13 +21,10 @@ public class Order {
     @Column(name = "id")
     private Long id;
 
-    @OneToOne(cascade = {CascadeType.MERGE, CascadeType.PERSIST})
+    @OneToOne(cascade = {CascadeType.MERGE, CascadeType.DETACH})
     @JoinColumn(name = "product_id")
     private Product product;
 
     @Column(name = "quantity")
     private Long quantity;
-
-
-
 }
