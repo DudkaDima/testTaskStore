@@ -10,16 +10,15 @@ import com.dudka.store.service.ProductService;
 import com.dudka.store.service.UserService;
 import com.dudka.store.util.mapper.MapperEntityDto;
 import lombok.extern.log4j.Log4j2;
-import org.apache.logging.log4j.Level;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Scope;
-import org.springframework.data.redis.core.StringRedisTemplate;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
@@ -28,7 +27,7 @@ import java.util.stream.Collectors;
 @Log4j2
 public class OrderController {
 
-    private final StringRedisTemplate redisTemplate;
+    private final RedisTemplate<String, OrderRequestDto> redisTemplate;
     private final UserService userService;
 
     private final OrderDetailsService orderDetailsService;
@@ -38,7 +37,7 @@ public class OrderController {
 
 
     @Autowired
-    public OrderController(StringRedisTemplate redisTemplate, UserService userService, OrderDetailsService orderDetailsService,
+    public OrderController(RedisTemplate<String, OrderRequestDto> redisTemplate, UserService userService, OrderDetailsService orderDetailsService,
                            ProductService productService) {
         this.redisTemplate = redisTemplate;
         this.userService = userService;
@@ -56,31 +55,30 @@ public class OrderController {
     }
 
     @RequestMapping(method = RequestMethod.POST, consumes = MediaType.ALL_VALUE, path = "/saveOrder")
-    @ResponseBody
-    public void saveOrder(@RequestBody OrderRequestDto orderRequestDto) {
-        Optional<User> user =
-                userService.findUserById(orderRequestDto.getUserId());
-        List<Product> productList =
-                productService.findAllProductsById(
-                        MapperEntityDto.getAllProductsId(
-                                orderRequestDto.getOrder()));
-        OrderDetails orderDetails = MapperEntityDto.mapOrderRequestToOrderDetails(
-                orderRequestDto, user.get(), productList);
-        OrderDetails savedOrderDetails = orderDetailsService.saveOrderDetails(orderDetails);
-        log.log(Level.INFO, savedOrderDetails.getId());
-        redisTemplate.opsForValue().set("order:" + savedOrderDetails.getUser().getId(),
-                String.valueOf(savedOrderDetails.getUser().getId()),
-                30, TimeUnit.SECONDS);
-
+    @ResponseBody()
+    public ResponseEntity<String> saveOrder(@RequestBody OrderRequestDto orderRequestDto) {
+        String uuid = UUID.randomUUID().toString();
+        redisTemplate.opsForValue().set(uuid, orderRequestDto);
+        redisTemplate.expire(uuid, 20, TimeUnit.SECONDS);
+        return ResponseEntity.ok(uuid);
     }
 
     @RequestMapping(method = RequestMethod.PATCH, consumes = MediaType.ALL_VALUE, path = "/payForOrder")
     @ResponseBody
-    public void payForOrder(@RequestParam(name = "id") Long id) {
-        Optional<OrderDetails> orderDetails = orderDetailsService.findById(id);
-        if(orderDetails.isPresent()) {
-            orderDetails.get().setPayment_status(true);
-            orderDetailsService.saveOrderDetails(orderDetails.get());
+    public void payForOrder(@RequestParam(name = "id") String id) {
+        OrderRequestDto orderRequestDto = redisTemplate.opsForValue().get(id);
+        if(orderRequestDto != null) {
+            orderRequestDto.setPaymentStatus(true);
+            Optional<User> user =
+                    userService.findUserById(orderRequestDto.getUserId());
+            List<Product> productList =
+                    productService.findAllProductsById(
+                            MapperEntityDto.getAllProductsId(
+                                    orderRequestDto.getOrder()));
+            OrderDetails orderDetails = MapperEntityDto.mapOrderRequestToOrderDetails(
+                    orderRequestDto, user.get(), productList);
+            orderDetailsService.saveOrderDetails(orderDetails);
         }
+
     }
 }
